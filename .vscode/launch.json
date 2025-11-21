@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-AcademicoRestApplication<academico-rest>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.uav.academico_rest.AcademicoRestApplication",
+      "projectName": "academico-rest",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
