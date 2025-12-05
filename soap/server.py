@@ -45,7 +45,7 @@ class InscripcionesService(ServiceBase):
         alumno = db.query(Alumno).filter(Alumno.matricula == matricula_buscada).first()
         
         if alumno:
-            # Convertimos el objeto de BD a objeto SOAP
+            # BD -> SOAP
             return AlumnoModelResponse(
                 matricula=alumno.matricula,
                 curp=alumno.curp,
@@ -57,25 +57,23 @@ class InscripcionesService(ServiceBase):
         else:
             return None
         
-    # Editar Alumno (con validacion)
+    # Editar Alumno
     @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Unicode)
     def editar_alumno(ctx, matricula, nuevo_nombre, nuevo_apellido, nuevo_email, nuevo_estatus):
         db = get_bd()
         
-        # Consultar (Validación de existencia)
+        # Consultar (Validacion)
         alumno = db.query(Alumno).filter(Alumno.matricula == matricula).first()
         
         if alumno:
             try:
-                # Actualizar campos de texto
+                # Actualizar datos
                 alumno.nombre = nuevo_nombre
                 alumno.apellido = nuevo_apellido
                 alumno.email = nuevo_email
                 
-                # Actualizar Estatus (Validando que sea una opción correcta)
-                # Intentamos convertir el texto que llega (ej: "BAJA_TEMPORAL") al Enum
+                # Actualizar estatus
                 if nuevo_estatus:
-                    # Esto lanzará error si el estatus no existe en el Enum
                     alumno.estatus = EstatusAlumno(nuevo_estatus)
                 
                 db.commit()
@@ -118,7 +116,7 @@ wsgi_app = WsgiApplication(application)
 if __name__ == '__main__':
     
     # Sincronizar tablas en Railway
-    print("Conectando a Railway y revisando esquema de tablas...")
+    print("Conectando a la BD...")
     Base.metadata.create_all(bind=engine)
     print("Tablas listas.")
     
