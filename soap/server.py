@@ -1,5 +1,5 @@
 import logging
-from spyne import Application, rpc, ServiceBase, Integer, Unicode, Boolean
+from spyne import Application, rpc, ServiceBase, Integer, Unicode, Boolean, ComplexModel
 from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
 from wsgiref.simple_server import make_server
@@ -7,6 +7,14 @@ from wsgiref.simple_server import make_server
 # Modulos locales
 from database import get_bd, engine, Base
 from models import Alumno, EstatusAlumno
+
+# Modelo Complejo para devolver datos del alumno al consultar
+class AlumnoModelResponse(ComplexModel):
+    matricula = Unicode
+    nombre = Unicode
+    apellido = Unicode
+    email = Unicode
+    estatus = Unicode
 
 # -------------- Servicio SOAP --------------
 class InscripcionesService(ServiceBase):
@@ -30,21 +38,72 @@ class InscripcionesService(ServiceBase):
             db.rollback()
             return f"Error al inscribir: {str(e)}"
         
-    # Validar Inscripción
-    @rpc(Unicode, _returns=Boolean)
-    def validar_inscripcion(ctx, matricula_buscada):
+    # Consultar Alumno (requisito previo para editar/eliminar)
+    @rpc(Unicode, _returns=AlumnoModelResponse)
+    def consultar_alumno(ctx, matricula_buscada):
         db = get_bd()
-        
-        # Buscamos alumno que coincida en matrícula Y que su estatus sea el ENUM 'ACTIVO'
-        alumno = db.query(Alumno).filter(
-            Alumno.matricula == matricula_buscada,
-            Alumno.estatus == EstatusAlumno.ACTIVO
-        ).first()
+        alumno = db.query(Alumno).filter(Alumno.matricula == matricula_buscada).first()
         
         if alumno:
-            return True
+            # Convertimos el objeto de BD a objeto SOAP
+            return AlumnoModelResponse(
+                matricula=alumno.matricula,
+                curp=alumno.curp,
+                nombre=alumno.nombre,
+                apellido=alumno.apellido,
+                email=alumno.email,
+                estatus=alumno.estatus.value
+            )
         else:
-            return False
+            return None
+        
+    # Editar Alumno (con validacion)
+    @rpc(Unicode, Unicode, Unicode, Unicode, Unicode, _returns=Unicode)
+    def editar_alumno(ctx, matricula, nuevo_nombre, nuevo_apellido, nuevo_email, nuevo_estatus):
+        db = get_bd()
+        
+        # Consultar (Validación de existencia)
+        alumno = db.query(Alumno).filter(Alumno.matricula == matricula).first()
+        
+        if alumno:
+            try:
+                # Actualizar campos de texto
+                alumno.nombre = nuevo_nombre
+                alumno.apellido = nuevo_apellido
+                alumno.email = nuevo_email
+                
+                # Actualizar Estatus (Validando que sea una opción correcta)
+                # Intentamos convertir el texto que llega (ej: "BAJA_TEMPORAL") al Enum
+                if nuevo_estatus:
+                    # Esto lanzará error si el estatus no existe en el Enum
+                    alumno.estatus = EstatusAlumno(nuevo_estatus)
+                
+                db.commit()
+                return f"Éxito: Alumno {matricula} actualizado a estatus {nuevo_estatus}."
+            
+            except ValueError:
+                return "Error: Estatus inválido. Opciones: ACTIVO, BAJA_TEMPORAL, EGRESADO, SUSPENDIDO"
+            except Exception as e:
+                db.rollback()
+                return f"Error al actualizar: {str(e)}"
+        else:
+            return "Error: No se puede editar. El alumno no existe."
+        
+    # Eliminar Alumno
+    @rpc(Unicode, _returns=Unicode)
+    def eliminar_alumno(ctx, matricula):
+        db = get_bd()
+        # Consultar
+        alumno = db.query(Alumno).filter(Alumno.matricula == matricula).first()
+        
+        if alumno:
+            # Eliminar
+            db.delete(alumno)
+            db.commit()
+            return f"Éxito: Alumno {matricula} eliminado correctamente."
+        else:
+            return "Error: No se puede eliminar. El alumno no existe."
+            
         
 # -------------- Configuracion de la APP --------------
 application = Application(
