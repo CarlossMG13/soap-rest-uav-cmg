@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Examen SOA - Cliente Unificado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Estilos para la consola */
+      .console-text {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.85rem;
+        line-height: 1.2;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">
+          Sistema Universitario (SOA)
+        </h1>
+        <p class="text-gray-600 mt-2">
+          Integración de Servicios: SOAP (Python) + REST (Java)
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white border border-gray-300 p-6 rounded shadow-sm">
+          <h2 class="text-xl font-bold text-blue-700 mb-4 border-b pb-2">
+            Módulo Alumnos (SOAP)
+          </h2>
+
+          <form id="formSoap" class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Matrícula</label
+              >
+              <input
+                type="text"
+                id="s_matricula"
+                placeholder="Ej: A001"
+                class="w-full border border-gray-300 p-2 rounded"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                id="s_nombre"
+                placeholder="Nombre"
+                class="w-full border border-gray-300 p-2 rounded"
+              />
+              <input
+                type="text"
+                id="s_apellido"
+                placeholder="Apellido"
+                class="w-full border border-gray-300 p-2 rounded"
+              />
+            </div>
+
+            <input
+              type="text"
+              id="s_curp"
+              placeholder="CURP"
+              class="w-full border border-gray-300 p-2 rounded"
+            />
+            <input
+              type="email"
+              id="s_email"
+              placeholder="Email"
+              class="w-full border border-gray-300 p-2 rounded"
+            />
+
+            <select
+              id="s_estatus"
+              class="w-full border border-gray-300 p-2 rounded bg-white"
+            >
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="BAJA_TEMPORAL">BAJA_TEMPORAL</option>
+              <option value="EGRESADO">EGRESADO</option>
+            </select>
+
+            <div class="flex gap-2 pt-2">
+              <button
+                type="button"
+                onclick="soapRegistrar()"
+                class="flex-1 bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700"
+              >
+                Registrar
+              </button>
+              <button
+                type="button"
+                onclick="soapEditar()"
+                class="flex-1 bg-yellow-500 text-white font-bold py-2 rounded hover:bg-yellow-600"
+              >
+                Editar
+              </button>
+            </div>
+          </form>
+
+          <div
+            id="resSoap"
+            class="hidden mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded text-sm"
+          ></div>
+        </div>
+
+        <div class="bg-white border border-gray-300 p-6 rounded shadow-sm">
+          <h2 class="text-xl font-bold text-green-700 mb-4 border-b pb-2">
+            Módulo Cursos (REST)
+          </h2>
+
+          <form id="formRest" class="space-y-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700"
+                >Nombre del Curso</label
+              >
+              <input
+                type="text"
+                id="r_nombre"
+                class="w-full border border-gray-300 p-2 rounded"
+              />
+            </div>
+
+            <input
+              type="text"
+              id="r_profesor"
+              placeholder="Profesor"
+              class="w-full border border-gray-300 p-2 rounded"
+            />
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-500">Fecha Inicio</label>
+                <input
+                  type="date"
+                  id="r_fecha"
+                  class="w-full border border-gray-300 p-2 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500">Créditos</label>
+                <input
+                  type="number"
+                  id="r_creditos"
+                  class="w-full border border-gray-300 p-2 rounded"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onclick="restRegistrar()"
+              class="w-full bg-green-600 text-white font-bold py-2 rounded hover:bg-green-700 mt-2"
+            >
+              Guardar Curso
+            </button>
+          </form>
+
+          <div class="border-t my-4"></div>
+
+          <h3 class="font-bold text-gray-700 mb-2">Eliminar Curso</h3>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="r_filtro_nombre"
+              placeholder="Nombre o Fecha (YYYY-MM-DD)"
+              class="flex-grow border border-gray-300 p-2 rounded text-sm"
+            />
+            <button
+              onclick="restEliminarNombre()"
+              class="bg-red-500 text-white font-bold px-4 rounded hover:bg-red-600 text-sm"
+            >
+              Borrar
+            </button>
+          </div>
+
+          <div
+            id="resRest"
+            class="hidden mt-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded text-sm"
+          ></div>
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <div class="flex justify-between items-end mb-2">
+          <h3 class="text-lg font-bold text-gray-700">
+            Consola de Tráfico (XML / JSON)
+          </h3>
+          <button
+            onclick="document.getElementById('debugConsole').value=''"
+            class="text-sm text-gray-500 hover:text-black underline"
+          >
+            Limpiar
+          </button>
+        </div>
+        <textarea
+          id="debugConsole"
+          readonly
+          class="w-full h-64 bg-gray-900 text-green-400 p-4 rounded console-text border border-gray-400 focus:outline-none"
+          placeholder="Aquí aparecerán las peticiones raw..."
+        ></textarea>
+      </div>
+    </div>
+
+    <script>
+      function logToConsole(tipo, mensaje) {
+        const consola = document.getElementById("debugConsole");
+        const hora = new Date().toLocaleTimeString();
+        consola.value += `\n[${hora}] --- ${tipo} ---\n${mensaje}\n=================================\n`;
+        consola.scrollTop = consola.scrollHeight;
+      }
+
+      // --- SOAP (PYTHON) ---
+      async function soapRequest(xmlBody, accion) {
+        const display = document.getElementById("resSoap");
+        logToConsole(`ENVIANDO SOAP (${accion})`, xmlBody);
+
+        try {
+          const response = await fetch("http://localhost:8000/", {
+            method: "POST",
+            headers: { "Content-Type": "text/xml" },
+            body: xmlBody,
+          });
+          const text = await response.text();
+          logToConsole("RESPUESTA PYTHON", text);
+
+          let cleanMsg = text;
+          if (text.includes("Result>")) {
+            cleanMsg = text.substring(
+              text.indexOf("Result>") + 7,
+              text.indexOf("</")
+            );
+          }
+
+          display.classList.remove("hidden");
+          display.innerText = cleanMsg;
+        } catch (error) {
+          logToConsole("ERROR SOAP", error);
+          display.classList.remove("hidden");
+          display.innerText = "Error: " + error;
+        }
+      }
+
+      function soapRegistrar() {
+        const mat = document.getElementById("s_matricula").value;
+        const curp = document.getElementById("s_curp").value;
+        const nom = document.getElementById("s_nombre").value;
+        const ape = document.getElementById("s_apellido").value;
+        const mail = document.getElementById("s_email").value;
+
+        const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="uav.soap.inscripciones">
+               <soapenv:Header/><soapenv:Body><tns:inscribir_alumno>
+                 <tns:matricula>${mat}</tns:matricula><tns:curp>${curp}</tns:curp>
+                 <tns:nombre>${nom}</tns:nombre><tns:apellido>${ape}</tns:apellido>
+                 <tns:email>${mail}</tns:email>
+               </tns:inscribir_alumno></soapenv:Body></soapenv:Envelope>`;
+        soapRequest(xml, "REGISTRAR");
+      }
+
+      function soapEditar() {
+        const mat = document.getElementById("s_matricula").value;
+        const nom = document.getElementById("s_nombre").value;
+        const ape = document.getElementById("s_apellido").value;
+        const mail = document.getElementById("s_email").value;
+        const est = document.getElementById("s_estatus").value;
+
+        if (!mat) {
+          alert("Falta Matrícula");
+          return;
+        }
+        const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="uav.soap.inscripciones">
+               <soapenv:Header/><soapenv:Body><tns:editar_alumno>
+                 <tns:matricula>${mat}</tns:matricula><tns:nuevo_nombre>${nom}</tns:nuevo_nombre>
+                 <tns:nuevo_apellido>${ape}</tns:nuevo_apellido><tns:nuevo_email>${mail}</tns:nuevo_email>
+                 <tns:nuevo_estatus>${est}</tns:nuevo_estatus>
+               </tns:editar_alumno></soapenv:Body></soapenv:Envelope>`;
+        soapRequest(xml, "EDITAR");
+      }
+
+      // --- REST (JAVA) ---
+      async function restRegistrar() {
+        const display = document.getElementById("resRest");
+        const data = {
+          nombre: document.getElementById("r_nombre").value,
+          profesor: document.getElementById("r_profesor").value,
+          fechaInicio: document.getElementById("r_fecha").value,
+          creditos: document.getElementById("r_creditos").value,
+          descripcion: "Web",
+          horario: "Pendiente",
+          cupoMaximo: 30,
+        };
+
+        const jsonString = JSON.stringify(data, null, 2);
+        logToConsole("ENVIANDO REST (POST)", jsonString);
+
+        try {
+          const response = await fetch("http://localhost:8080/api/cursos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: jsonString,
+          });
+          const responseData = await response.json();
+          logToConsole("RESPUESTA JAVA", JSON.stringify(responseData, null, 2));
+
+          if (response.ok) {
+            display.classList.remove("hidden");
+            display.innerText = "Curso ID: " + responseData.id + " creado.";
+          }
+        } catch (error) {
+          logToConsole("ERROR REST", error);
+          display.classList.remove("hidden");
+          display.innerText = "Error: " + error;
+        }
+      }
+
+      async function restEliminarNombre() {
+        const display = document.getElementById("resRest");
+        const inputVal = document.getElementById("r_filtro_nombre").value;
+        if (!inputVal) {
+          alert("Campo vacío");
+          return;
+        }
+
+        const isDate = inputVal.match(/^\d{4}-\d{2}-\d{2}$/);
+        const param = isDate ? `fecha=${inputVal}` : `nombre=${inputVal}`;
+        const url = `http://localhost:8080/api/cursos/filtro?${param}`;
+
+        logToConsole("ENVIANDO REST (DELETE)", "URL: " + url);
+
+        try {
+          const response = await fetch(url, { method: "DELETE" });
+          const texto = await response.text();
+          logToConsole("RESPUESTA JAVA", texto);
+          display.classList.remove("hidden");
+          display.innerText = texto;
+        } catch (error) {
+          logToConsole("ERROR REST", error);
+          display.classList.remove("hidden");
+          display.innerText = "Error: " + error;
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -101,6 +101,25 @@ class InscripcionesService(ServiceBase):
             return f"Éxito: Alumno {matricula} eliminado correctamente."
         else:
             return "Error: No se puede eliminar. El alumno no existe."
+        
+class CorsMiddleware:
+    def __init__(self, app):
+        self.app = app
+    def __call__(self, environ, start_response):
+        # SI a todo
+        if environ['REQUEST_METHOD'] == 'OPTIONS':
+            start_response('200 OK', [
+                ('Access-Control-Allow-Origin', '*'),
+                ('Access-Control-Allow-Methods', 'POST, GET, OPTIONS'),
+                ('Access-Control-Allow-Headers', 'Content-Type'),
+            ])
+            return []
+        
+        def custom_start_response(status, headers, exc_info=None):
+            headers.append(('Access-Control-Allow-Origin', '*'))
+            return start_response(status, headers, exc_info)
+            
+        return self.app(environ, custom_start_response)
             
         
 # -------------- Configuracion de la APP --------------
@@ -112,6 +131,7 @@ application = Application(
 )
 
 wsgi_app = WsgiApplication(application)
+wsgi_app = CorsMiddleware(wsgi_app)
 
 if __name__ == '__main__':
     
